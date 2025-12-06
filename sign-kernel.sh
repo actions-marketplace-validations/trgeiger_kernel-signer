@@ -3,26 +3,26 @@
 set -ouex pipefail
 
 kernel_version=""
-alt_kernels=$(sed 's/$/-/' /tmp/kernel_options.txt | paste -sd'|')
 
-if command -v rpm; then
-  kernel_version=$(rpm -qa | grep -P "kernel-(|$alt_kernels)(\d+\.\d+\.\d+)" | sed -E "s/kernel-(|$alt_kernels)//")
+if [[ "$KERNEL_SUFFIX" != "" ]]; then
+  kernel_version=$(rpm -qa | grep -P 'kernel-('"$KERNEL_SUFFIX"'-)(\d+\.\d+\.\d+)' | sed -E 's/kernel-('"$KERNEL_SUFFIX"'-)//')
+else
+  kernel_version=$(rpm -qa | grep -P 'kernel-(\d+\.\d+\.\d+)' | sed -E 's/kernel-//')
 fi
 
-if command -v rpm-ostree; then
-  rpm-ostree install sbsigntools openssl
+if command -v dnf5; then
+  dnf5 -y install sbsigntools openssl
 elif command -v dnf; then
-  dnf install sbsigntools openssl
-elif command -v dnf5; then
-  dnf5 install sbsigntools openssl
+  dnf -y install sbsigntools openssl
+elif command -v rpm-ostree; then
+  rpm-ostree install sbsigntools openssl
 fi
 
 # Private key
 if [[ "${PRIVKEY}" == /* ]]; then
   PRIVKEY_PATH="${PRIVKEY}"
 else
-  PRIVKEY_PATH="/etc/pki/kernel/private/private_key.priv"
-  mkdir -p "$(dirname "$PRIVKEY_PATH")"
+  PRIVKEY_PATH="/tmp/private_key.priv"
   if [[ "${PRIVKEY}" == ./* ]]; then
     cp "${PRIVKEY}" "${PRIVKEY_PATH}"
   elif [[ "${PRIVKEY}" == http* ]]; then
@@ -52,13 +52,18 @@ echo "Signing kernel..."
 CRT_PATH=$(echo $(dirname "$PUBKEY_PATH")/public_key.crt)
 
 openssl x509 -in $PUBKEY_PATH -out $CRT_PATH
-EXISTING_SIGNATURES="$(sbverify --list /usr/lib/modules/$kernel_version/vmlinuz | grep '^signature \([0-9]\+\)$' | sed 's/^signature \([0-9]\+\)$/\1/')"
-for SIGNUM in $EXISTING_SIGNATURES
-do
-  echo "Found existing signature at signum $SIGNUM, removing..."
-  sbattach --remove /usr/lib/modules/$kernel_version/vmlinuz
-done
+if [[ "${STRIP}" == true ]]; then
+  EXISTING_SIGNATURES="$(sbverify --list /usr/lib/modules/$kernel_version/vmlinuz | grep '^signature \([0-9]\+\)$' | sed 's/^signature \([0-9]\+\)$/\1/')" || true
+  if [[ -n $EXISTING_SIGNATURES ]]; then
+    for SIGNUM in $EXISTING_SIGNATURES
+    do
+      echo "Found existing signature at signum $SIGNUM, removing..."
+      sbattach --remove /usr/lib/modules/$kernel_version/vmlinuz
+    done
+  fi
+fi
 sbsign --cert $CRT_PATH --key $PRIVKEY_PATH /usr/lib/modules/$kernel_version/vmlinuz --output /usr/lib/modules/$kernel_version/vmlinuz
+rm -rf $PRIVKEY_PATH
 sbverify --list /usr/lib/modules/$kernel_version/vmlinuz
 
 if command -v ostree; then

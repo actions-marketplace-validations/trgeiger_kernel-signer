@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.2.4](https://github.com/EyeCantCU/kernel-signer/compare/v0.2.1...v0.2.4) (2024-07-11)
+
+
+### Features
+
+* **action:** Add option to disable stripping the kernel of keys before signing. ([#18](https://github.com/EyeCantCU/kernel-signer/issues/18)) ([1c9506d](https://github.com/EyeCantCU/kernel-signer/commit/1c9506dd7640d00f7669a52a05eae755a861c115))
+
+
+### Bug Fixes
+
+* **action:** Restore image input ([7e60f33](https://github.com/EyeCantCU/kernel-signer/commit/7e60f3396d1d20a18c85ae1c5b75b803ac533307))
+
+
+### Miscellaneous Chores
+
+* release v0.2.4 ([731525a](https://github.com/EyeCantCU/kernel-signer/commit/731525ab96b468f48d4a832819da118cc8c71d12))
+
+## [0.2.1](https://github.com/EyeCantCU/kernel-signer/compare/v0.2.0...v0.2.1) (2024-05-18)
+
+
+### Bug Fixes
+
+* **action:** Allow overriding default tag, default to latest ([888035b](https://github.com/EyeCantCU/kernel-signer/commit/888035b167e87d9a1c376a8fec1e8d71cd6a7826))
+* **action:** Attempt to pull image if unavailable ([c6cd4d5](https://github.com/EyeCantCU/kernel-signer/commit/c6cd4d543157750c5c87b14d65150eb1d8cf8ba5))
+* **action:** Only pull if missing from local storage ([4fa410e](https://github.com/EyeCantCU/kernel-signer/commit/4fa410ebb9f6188d5fa3647d5423a5db97c672c0))
+* **action:** Support passing repository, default to localhost ([6101f34](https://github.com/EyeCantCU/kernel-signer/commit/6101f347773ffdf20246a891aae56195140c38d0))
+
+## [0.2.0](https://github.com/EyeCantCU/kernel-signer/compare/v0.1.3...v0.2.0) (2024-05-16)
+
+
+### Features
+
+* **action:** Allow passing a custom kernel suffix ([5089a88](https://github.com/EyeCantCU/kernel-signer/commit/5089a889c17b3e842f4535313c7286260cf4ee9c))
+
+
+### Bug Fixes
+
+* **action:** Use image basename as container name ([52eae3a](https://github.com/EyeCantCU/kernel-signer/commit/52eae3a2ee3a767436cb353be4fdfea15358aa69))
+* **sign-kernel:** Properly substitute kernel_suffix value ([#15](https://github.com/EyeCantCU/kernel-signer/issues/15)) ([e26229d](https://github.com/EyeCantCU/kernel-signer/commit/e26229dde649a43bd17eaacc1e768a15d7bf0fd1))
+
 ## [0.1.3](https://github.com/EyeCantCU/kernel-signer/compare/v0.1.2...v0.1.3) (2024-02-04)
 
 

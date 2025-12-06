@@ -5,6 +5,13 @@ inputs:
   image:
     description: 'Image containing kernel'
     required: true
+  default_tag:
+    description: 'Default tag used by container'
+    default: 'latest'
+    required: true
+  kernel_suffix:
+    description: 'Allows passing a custom kernel suffix. Only use if kernel package name has been changed'
+    required: false
   privkey:
     description: 'Private key, path to private key, or URL to retrieve private key'
     default: '/etc/pki/kernel/private/private_key.priv'
@@ -13,24 +20,31 @@ inputs:
     description: 'Public key, path to public key, or URL to retrieve public key'
     default: '/etc/pki/kernel/public/public_key.der'
     required: true
+  repository:
+    description: 'Repository containing image'
+    default: 'localhost'
+    required: true
   tags:
     description: 'Tags used by container'
     default: 'latest'
     required: true
+  strip:
+    description: 'Whether or not to strip existing secure boot keys from the kernel'
+    default: 'true'
+    required: false
 runs:
   using: "composite"
   steps:
     - name: Sign kernel
       shell: bash
       run: |
-        CONTAINER_ID=$(podman run --entrypoint /bin/bash --replace --name "${{ inputs.image }}" -dt "${{ inputs.image }}")
-        podman cp "${{ github.action_path }}"/sign-kernel.sh "${{ inputs.image }}":/tmp/sign-kernel.sh
-        podman cp "${{ github.action_path }}"/kernel_options.txt "${{ inputs.image }}":/tmp/kernel_options.txt
-        podman exec -e PRIVKEY="${{ inputs.privkey }}" -e PUBKEY="${{ inputs.pubkey }}" "${{ inputs.image }}" "/tmp/sign-kernel.sh"
-        buildah commit "$CONTAINER_ID" "${{ inputs.image }}"
+        CONTAINER_ID=$(sudo podman run --pull missing --entrypoint /bin/bash --replace --name $(basename "${{ inputs.image }}") -dt "${{ inputs.repository }}/${{ inputs.image }}:${{ inputs.default-tag }}")
+        sudo podman cp "${{ github.action_path }}"/sign-kernel.sh $(basename "${{ inputs.image }}"):/tmp/sign-kernel.sh
+        sudo podman exec -e KERNEL_SUFFIX="${{ inputs.kernel_suffix }}" -e PRIVKEY="${{ inputs.privkey }}" -e PUBKEY="${{ inputs.pubkey }}" -e STRIP="${{ inputs.strip }}" $(basename "${{ inputs.image }}") "/tmp/sign-kernel.sh"
+        sudo buildah commit "$CONTAINER_ID" "${{ inputs.image }}"
         for TAG in $TAGS; do
           echo "Tagging ${{ inputs.image }} with tag: $TAG"
-          buildah tag "${{ inputs.image }}" "${{ inputs.image }}":$TAG
+          sudo buildah tag "${{ inputs.image }}" "${{ inputs.image }}":$TAG
         done
       env:
         TAGS: ${{ inputs.tags }}
